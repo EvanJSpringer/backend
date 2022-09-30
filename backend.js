@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { v4: uuidv4 } = require('uuid');
 const app = express();
 const port = 5000;
 
@@ -68,10 +69,16 @@ app.get('/users/:id', (req, res) => {
     }
 });
 
+function findUserById(id) {
+    return users['users_list'].find( (user) => user['id'] === id); // or line below
+    //return users['users_list'].filter( (user) => user['id'] === id);
+}
+
 app.post('/users', (req, res) => {
     const userToAdd = req.body;
+    userToAdd.id = uuidv4();
     addUser(userToAdd);
-    res.status(200).end();
+    res.status(201).send(userToAdd).end();
 });
 
 function addUser(user){
@@ -81,21 +88,17 @@ function addUser(user){
 app.delete('/users/:id', (req, res) => {
     const id = req.params['id'];
     let result = findUserById(id);
+    let index = users['users_list'].indexOf(result);
     if (result === undefined || result.length == 0)
         res.status(404).send('Resource not found.');
     else {
-        result = {users_list: result};
-        res.deleteUser(result);
+        deleteUser(index);
+        res.status(204).end();
     }
 });
 
-function deleteUser(user){
-    users['users_list'].splice(user);
-}
-
-function findUserById(id) {
-    return users['users_list'].find( (user) => user['id'] === id); // or line below
-    //return users['users_list'].filter( (user) => user['id'] === id);
+function deleteUser(index){
+    users['users_list'].splice(index, 1);
 }
 
 app.listen(port, () => {
